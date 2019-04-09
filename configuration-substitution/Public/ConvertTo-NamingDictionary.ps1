@@ -53,7 +53,7 @@ function ConvertTo-NamingDictionary {
             [adesso.BusinessProcesses.ConfigurationSubstitution.Templating.Resolver]::ConvertSchemeToDictionary($SchemeString, $NamingData)
         }
         "WithObject" {
-            $naming = [NamingData]::new($NamingData)
+            $naming = [adesso.BusinessProcesses.ConfigurationSubstitution.NamingData]::new($InputObject)
             [adesso.BusinessProcesses.ConfigurationSubstitution.Templating.Resolver]::ConvertSchemeToDictionary($SchemeString, $naming)
         }
     }

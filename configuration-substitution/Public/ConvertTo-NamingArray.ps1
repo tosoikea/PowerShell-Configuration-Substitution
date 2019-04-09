@@ -49,7 +49,7 @@ function ConvertTo-NamingArray {
             [adesso.BusinessProcesses.ConfigurationSubstitution.Templating.Resolver]::ConvertSchemeToArray($SchemeString, $NamingData)
         }
         "WithObject" {
-            $naming = [NamingData]::new($NamingData)
+            $naming = [adesso.BusinessProcesses.ConfigurationSubstitution.NamingData]::new($InputObject)
             [adesso.BusinessProcesses.ConfigurationSubstitution.Templating.Resolver]::ConvertSchemeToArray($SchemeString, $naming)
         }
     }
