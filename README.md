@@ -5,6 +5,11 @@
 This module essentially provides a simple way of substituting placeholder variables inside
 a scheme string with runtime data.
 
+The module is built to work with a plethora of PSObjects to improve simplicity of calls.
+This allows the direct usage of the results e.g. provided by the ActiveDirectory module.
+
+ConvertTo-NamingArray -SchemeString "{givenName(0)}{surname}" -InputObject (Get-ADUser -Identity test)
+
 ## Structure
 
 ### General
@@ -12,49 +17,50 @@ a scheme string with runtime data.
 A scheme string is build up of multiple parts.
 1. Variable
     **{*name*....}**
-    
     2.1 The used name directly corellates to the name inside the supplied
     data structure during runtime
-    
     2.2 A variable can be marked as failover with a starting **?**
-    
 2. Operation (lower,upper,split,countUP,countDOWN,split,**replace**,**0/1/2/...**)
     **{...(*operation*)}**
-    
     2.1 The operation is evaluated upon the value supplied during runtime.
     e.g. scheme = "{givenName(lower)}"
     => from *TORBEN* to *torben*
-    
     2.2 An operation can be marked as failover with a starting **?**
-    
 3. String data
     **i am string data**
-    
     3.1 Plain text with no further evaluation.
 
 ### Failover
 During evaluation of a scheme an operation tree is built.
-A scheme can have different, valid paths depending on the mandatority of an operation.
+A scheme can have different, valid paths depending on the mandatory of an operation.
 The operation tree includes every possible, valid constellation of operations.
 
-e.g {?failoverVar}.{mandatoryVar}
-=>
-.mandatoryVar
-failoverVar.mandatoryVar
-e.g {variable(lower)(?0)(?countUp)} with variable = TEST
-=>
-test
-t1
-t2
+**{?failoverVar}.{mandatoryVar}**
+- failoverVar is marked as a failover variable
+- valid paths are
+1. **.mandatory**
+2. **failoverVar**.**mandatoryVar**
+
+
+**{variable(lower)(?0)(?countUp)}** with variable = TEST
+- the usage of the selector (0) and countUP operation are marked as failover
+- valid paths are
+1. test
+2. t1
+3. t2
 ..
-t9
-e.g {variable(lower)(?0?countUP)} with variable = TEST
-=>
-lol
-l
-lol1
+10. t9
+
+
+**{variable(lower)(?0?countUP)}** with variable = TEST
+- the usage of the selector (0) is marked as failover with an additional failover to the countUP operation
+- valid paths are
+1. test
+2. t
+3. test1
+4. test2
 ..
-lol9
+11. test9
 
 
 
