@@ -53,14 +53,14 @@ function Resolve-Module
 # Creates all binary dlls inside ./src/ConfigurationSubstitution/bin/Release/$targetFramework/publish
 & $dotnetCliPath publish ./src/ConfigurationSubstitution -c release
 if (-not $?){
-    Write-Error -Message "Build failed" -ErrorAction Stop
+    Write-Error -Message "Library Build failed" -ErrorAction Stop
 }
 Copy-Item -Recurse -Force -Filter "*.dll" -Path $dllPath -Destination $moduleBinPath -ErrorAction Stop
 
 # Grab nuget bits, install modules, set build variables, start build.
 Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
 
-Resolve-Module Psake, PSDeploy, Pester, BuildHelpers
+Resolve-Module -Name @("powershell-yaml","Psake", "PSDeploy", "Pester", "BuildHelpers", "platyPS")
 
 Set-BuildEnvironment
 

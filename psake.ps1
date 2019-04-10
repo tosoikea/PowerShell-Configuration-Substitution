@@ -2,11 +2,11 @@
 # Init some things
 Properties {
     # Find the build folder based on build system
-        $ProjectRoot = $ENV:BHProjectPath
-        if(-not $ProjectRoot)
-        {
-            $ProjectRoot = $PSScriptRoot
-        }
+    $ProjectRoot = $ENV:BHProjectPath
+    if(-not $ProjectRoot)
+    {
+        $ProjectRoot = $PSScriptRoot
+    }
 
     $Timestamp = Get-date -uformat "%Y%m%d-%H%M%S"
     $PSVersion = $PSVersionTable.PSVersion.Major
@@ -26,7 +26,7 @@ Task Init {
     $lines
     Set-Location $ProjectRoot
     "Build System Details:"
-    Get-Item ENV:BH*
+    Get-Item ENV:BH* | Format-List
     "`n"
 }
 
@@ -66,7 +66,76 @@ Task Build -Depends Test {
     Update-Metadata -Path $env:BHPSModuleManifest
 }
 
-Task Deploy -Depends Build {
+Task BuildDocs -Depends Build {
+    $lines
+    
+    [String] $mkPath = [System.IO.Path]::Combine($ProjectRoot, "mkdocs.yml")
+    [String] $docDirectory = [System.IO.Path]::Combine($ProjectRoot, "docs")
+    [String] $funcDocPath = [System.IO.Path]::Combine($docDirectory, "functions")
+
+    [hashtable] $moduleData = Import-PowerShellDataFile -Path $env:BHPSModuleManifest
+    
+    if (!$moduleData) {
+        throw [System.ArgumentNullException]::new("Missing module manifest data at : " + $env:BHPSModuleManifest)
+    }
+
+    [String] $moduleName = $moduleData.RootModule -replace "\.psm1"
+    Import-Module $env:BHPSModuleManifest -Force
+
+    $generatedMarkdown = New-MarkdownHelp -Module $moduleName -OutputFolder $funcDocPath -Force
+    #Display creation result
+    "Created Markdown files :`n"
+    $generatedMarkdown.Name
+
+
+    [hashtable] $docData = @{ }
+
+    if (Get-Item -Path $mkPath -ErrorAction SilentlyContinue) {
+        $docData = ConvertFrom-Yaml -Yaml (Get-Content -Pat $mkPath -Raw)
+    }
+
+    if(!$docData){
+        $docData = @{
+            "site_name" = ([String](Get-ProjectName))
+            "edit_uri"  = "edit/master/docs/"
+            "theme"    = "readthedocs"
+        }
+    }
+
+    $docData.Item("site_author") = ([String]$moduleData.Author)
+    $docData.Item("copyright") = ([String]$moduleData.Copyright)
+
+    if (!$docData.ContainsKey("pages")) {
+        $docData.Add("pages", @{
+                "Home"  = "index.md"
+                "Usage" = "usage.md"
+            })
+    }
+
+    if (!$docData."pages".ContainsKey("Functions")) {
+        $docData."pages".Add("Functions", @{ })
+    }
+
+    [String[]] $functions = @()
+    $functions += Get-ModuleFunction
+
+    if ($functions.Length -eq 0) {
+        throw [System.ArgumentNullException]::new("Could not determine any public functions!")
+    }
+
+    foreach ( $function in $functions ) {
+        [String] $markDownFile = [System.IO.Path]::Combine($funcDocPath, "$function.md")
+        if (!(Get-Item -Path $markDownFile)) {
+            throw [System.ArgumentNullException]::new("Missing : $markDownFile!")
+        }
+        
+        $docData."pages"."Functions".Add($function, $markDownFile.Substring($docDirectory.Length + 1))
+    }
+    
+    ConvertTo-Yaml -Data $docData -OutFile $mkPath -Force
+}
+
+Task Deploy -Depends BuildDocs {
     $lines
 
     $Params = @{

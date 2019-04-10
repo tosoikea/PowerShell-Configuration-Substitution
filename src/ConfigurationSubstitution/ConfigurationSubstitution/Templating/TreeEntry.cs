@@ -16,10 +16,7 @@ namespace adesso.BusinessProcesses.ConfigurationSubstitution.Templating
         #endregion
 
         #region Methods
-        public override string ToString()
-        {
-            return JsonConvert.SerializeObject(this);
-        }
+        public override string ToString() => JsonConvert.SerializeObject(this);
 
 
         public static ISet<string> Resolve(IEnumerable<string> values, TreeEntry tree)
