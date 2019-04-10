@@ -45,6 +45,14 @@ function Resolve-Module
     }
 }
 
+[string] $dllPath = "./src/ConfigurationSubstitution/ConfigurationSubstitution/bin/Release/*"
+[string] $moduleBinPath = "./configuration-substitution/bin/"
+[string] $dotnetCliPath = (Get-Command -Name dotnet -ErrorAction Stop).Path
+
+# Creates all binary dlls inside ./src/ConfigurationSubstitution/bin/Release
+& $dotnetCliPath build ./src/ConfigurationSubstitution -c RELEASE
+Copy-Item -Recurse -Force -Filter "*.dll" -Path $dllPath -Destination $moduleBinPath
+
 # Grab nuget bits, install modules, set build variables, start build.
 Get-PackageProvider -Name NuGet -ForceBootstrap | Out-Null
 
