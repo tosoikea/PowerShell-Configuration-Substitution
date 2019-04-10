@@ -10,6 +10,8 @@ This allows the direct usage of the results e.g. provided by the ActiveDirectory
 
 ConvertTo-NamingArray -SchemeString "{givenName(0)}{surname}" -InputObject (Get-ADUser -Identity test)
 
+**Documentation can be found at : https://configuration-substitution.readthedocs.io/en/latest/**
+
 ## Structure
 
 ### General

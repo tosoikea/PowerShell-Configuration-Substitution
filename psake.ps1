@@ -105,23 +105,23 @@ Task BuildDocs -Depends Build {
     $docData.Item("site_author") = ([String]$moduleData.Author)
     $docData.Item("copyright") = ([String]$moduleData.Copyright)
 
-    if (!$docData.ContainsKey("pages")) {
-        $docData.Add("pages", @(
+    if (!$docData.ContainsKey("nav")) {
+        $docData.Add("nav", @(
                 @{"Home" = "index.md" }
                 @{"Usage" = "usage.md" }
             ))
     }
 
     [int] $removeIndex = -1
-    for ([int] $pI = 0; ($pI -lt ($docData."pages").Count) -and ($removeIndex -eq -1); $pI++){
-        $pageEntry = ($docData."pages")[$pI]
+    for ([int] $pI = 0; ($pI -lt ($docData."nav").Count) -and ($removeIndex -eq -1); $pI++){
+        $pageEntry = ($docData."nav")[$pI]
         if ($pageEntry.ContainsKey("Functions")){
             $removeIndex = $pI
         }
     }
 
     if ($removeIndex -ge 0){
-        ($docData."pages").RemoveAt($removeIndex)
+        ($docData."nav").RemoveAt($removeIndex)
         "Removed current Functions pages."
     }
 
@@ -139,9 +139,10 @@ Task BuildDocs -Depends Build {
             throw [System.ArgumentNullException]::new("Missing : $markDownFile!")
         }
         
-        $functionEntries += @{$function = $markDownFile.Substring($docDirectory.Length + 1) }
+        [string] $markdownTarget = $markDownFile.Substring($docDirectory.Length + 1) -replace "\\","/"
+        $functionEntries += @{$function = $markdownTarget }
     }
-    $docData."pages" += @{ "Functions" = $functionEntries }
+    $docData."nav" += @{ "Functions" = $functionEntries }
 
     
     ConvertTo-Yaml -Data $docData -OutFile $mkPath -Force
