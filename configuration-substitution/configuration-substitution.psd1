@@ -12,7 +12,7 @@
 RootModule = 'configuration-substitution.psm1'
 
 # Die Versionsnummer dieses Moduls
-ModuleVersion = '1.0.9'
+ModuleVersion = '1.0.17'
 
 # Unterstützte PSEditions
 # CompatiblePSEditions = @()

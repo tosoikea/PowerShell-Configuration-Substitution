@@ -1,11 +1,11 @@
 copyright: (c) 2019 Torben Soennecken. All rights reserved
-theme: readthedocs
 site_name: configuration-substitution
-site_author: Torben Soennecken
 edit_uri: edit/master/docs/
+theme: readthedocs
+site_author: Torben Soennecken
 pages:
-  Functions:
-    ConvertTo-NamingArray: functions\ConvertTo-NamingArray.md
-    ConvertTo-NamingDictionary: functions\ConvertTo-NamingDictionary.md
-  Usage: usage.md
-  Home: index.md
+- Home: index.md
+- Usage: usage.md
+- Functions:
+  - ConvertTo-NamingArray: functions\ConvertTo-NamingArray.md
+  - ConvertTo-NamingDictionary: functions\ConvertTo-NamingDictionary.md

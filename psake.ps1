@@ -94,7 +94,7 @@ Task BuildDocs -Depends Build {
         $docData = ConvertFrom-Yaml -Yaml (Get-Content -Pat $mkPath -Raw)
     }
 
-    if(!$docData){
+    if(!$docData -or $docData.Count -eq 0){
         $docData = @{
             "site_name" = ([String](Get-ProjectName))
             "edit_uri"  = "edit/master/docs/"
@@ -106,14 +106,23 @@ Task BuildDocs -Depends Build {
     $docData.Item("copyright") = ([String]$moduleData.Copyright)
 
     if (!$docData.ContainsKey("pages")) {
-        $docData.Add("pages", @{
-                "Home"  = "index.md"
-                "Usage" = "usage.md"
-            })
+        $docData.Add("pages", @(
+                @{"Home" = "index.md" }
+                @{"Usage" = "usage.md" }
+            ))
     }
 
-    if (!$docData."pages".ContainsKey("Functions")) {
-        $docData."pages".Add("Functions", @{ })
+    [int] $removeIndex = -1
+    for ([int] $pI = 0; ($pI -lt ($docData."pages").Count) -and ($removeIndex -eq -1); $pI++){
+        $pageEntry = ($docData."pages")[$pI]
+        if ($pageEntry.ContainsKey("Functions")){
+            $removeIndex = $pI
+        }
+    }
+
+    if ($removeIndex -ge 0){
+        ($docData."pages").RemoveAt($removeIndex)
+        "Removed current Functions pages."
     }
 
     [String[]] $functions = @()
@@ -123,14 +132,17 @@ Task BuildDocs -Depends Build {
         throw [System.ArgumentNullException]::new("Could not determine any public functions!")
     }
 
+    [Hashtable[]] $functionEntries = @()
     foreach ( $function in $functions ) {
         [String] $markDownFile = [System.IO.Path]::Combine($funcDocPath, "$function.md")
         if (!(Get-Item -Path $markDownFile)) {
             throw [System.ArgumentNullException]::new("Missing : $markDownFile!")
         }
         
-        $docData."pages"."Functions".Add($function, $markDownFile.Substring($docDirectory.Length + 1))
+        $functionEntries += @{$function = $markDownFile.Substring($docDirectory.Length + 1) }
     }
+    $docData."pages" += @{ "Functions" = $functionEntries }
+
     
     ConvertTo-Yaml -Data $docData -OutFile $mkPath -Force
 }
