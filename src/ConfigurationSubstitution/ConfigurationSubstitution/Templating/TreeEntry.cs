@@ -44,7 +44,7 @@ namespace adesso.BusinessProcesses.ConfigurationSubstitution.Templating
                         additions.AddRange(Operations.Count(true, value));
                         break;
                     case "countDOWN":
-                        additions.AddRange(Operations.Count(true, value));
+                        additions.AddRange(Operations.Count(false, value));
                         break;
                     case SchemeToken.FailoverStart:
                         additions.Add(value);

@@ -73,14 +73,15 @@ Task BuildDocs -Depends Build {
     [String] $docDirectory = [System.IO.Path]::Combine($ProjectRoot, "docs")
     [String] $funcDocPath = [System.IO.Path]::Combine($docDirectory, "functions")
 
-    [hashtable] $moduleData = Import-PowerShellDataFile -Path $env:BHPSModuleManifest
+    [hashtable] $moduleData = Import-PowerShellDataFile -Path $env:BHPSModuleManifest -ErrorAction Stop
     
     if (!$moduleData) {
         throw [System.ArgumentNullException]::new("Missing module manifest data at : " + $env:BHPSModuleManifest)
     }
 
     [String] $moduleName = $moduleData.RootModule -replace "\.psm1"
-    Import-Module $env:BHPSModuleManifest -Force
+    Import-Module $env:BHPSModuleManifest -Force -ErrorAction Stop
+    "Imported module from "+$env:BHPSModuleManifest
 
     $generatedMarkdown = New-MarkdownHelp -Module $moduleName -OutputFolder $funcDocPath -Force
     #Display creation result
