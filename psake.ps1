@@ -80,10 +80,10 @@ Task BuildDocs -Depends Build {
     }
 
     [String] $moduleName = $moduleData.RootModule -replace "\.psm1"
-    Import-Module $env:BHPSModuleManifest -Force -ErrorAction Stop
-    "Imported module from "+$env:BHPSModuleManifest
+    Import-Module $env:BHModulePath -Force -ErrorAction Stop
+    "Imported module from "+$env:BHModulePath
 
-    $generatedMarkdown = New-MarkdownHelp -Module $moduleName -OutputFolder $funcDocPath -Force
+    $generatedMarkdown = New-MarkdownHelp -Module $env:BHModulePath -OutputFolder $funcDocPath -Force
     #Display creation result
     "Created Markdown files :`n"
     $generatedMarkdown.Name
