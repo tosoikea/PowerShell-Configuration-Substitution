@@ -63,7 +63,25 @@ Task Build -Depends Test {
     Set-ModuleFunctions
 
     # Bump the module version
-    Update-Metadata -Path $env:BHPSModuleManifest
+    $stepVersionSplat = @{
+        Version = (Get-Metadata -Path $env:BHPSModuleManifest)
+    }
+    
+    if ($env:BHCommitMessage -match "(?i)!fixedVersion") {
+        $version = [version]$stepVersionSplat.Version
+    }
+    else {
+        $version = [version](Step-Version @stepVersionSplat)
+    }
+
+    $galleryVersion = Get-NextPSGalleryVersion -Name $env:BHProjectName
+    if ($version -lt $galleryVersion) {
+        $version = $galleryVersion
+    }
+    $Script:version = [version]::New($version.Major, $version.Minor, $version.Build)
+    Write-Host "Using version: $version"
+
+    Update-Metadata -Path $env:BHPSModuleManifest -PropertyName ModuleVersion -Value $version
 }
 
 Task BuildDocs -Depends Build {
