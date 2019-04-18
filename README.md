@@ -1,4 +1,5 @@
 ![Build status](https://ci.appveyor.com/api/projects/status/gsioxb902o895gta?svg=true)
+[![Documentation Status](https://readthedocs.org/projects/configuration-substitution/badge/?version=latest)](https://configuration-substitution.readthedocs.io/en/latest/?badge=latest)
 # PowerShell Configuration Substitution
 
 ## Introduction

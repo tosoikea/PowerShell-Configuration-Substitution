@@ -80,7 +80,7 @@ Task BuildDocs -Depends Build {
     }
 
     [String] $moduleName = $moduleData.RootModule -replace "\.psm1"
-    Import-Module $env:BHModulePath -Force -ErrorAction Stop
+    Import-Module $env:BHModulePath -Force -Global -ErrorAction Stop
     "Imported module from "+$env:BHModulePath
 
     $generatedMarkdown = New-MarkdownHelp -Module $moduleName -OutputFolder $funcDocPath -Force
