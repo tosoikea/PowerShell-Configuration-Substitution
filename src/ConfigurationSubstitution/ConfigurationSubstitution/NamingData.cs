@@ -26,14 +26,14 @@ namespace adesso.BusinessProcesses.ConfigurationSubstitution
 
         public void AssureComparer()
         {
-            if (!BaseValues.Comparer.Equals(StringComparer.OrdinalIgnoreCase))
-            {
-                Dictionary<String, String> correctComparer = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                for (var baseEnum = BaseValues.GetEnumerator(); baseEnum.MoveNext();)
-                    correctComparer.Add(baseEnum.Current.Key, baseEnum.Current.Value);
+            if (BaseValues.Comparer.Equals(StringComparer.OrdinalIgnoreCase))
+                return;
 
-                BaseValues = correctComparer;
-            }
+            Dictionary<String, String> correctComparer = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            for (var baseEnum = BaseValues.GetEnumerator(); baseEnum.MoveNext();)
+                correctComparer.Add(baseEnum.Current.Key, baseEnum.Current.Value);
+
+            BaseValues = correctComparer;
         }
 
         public bool ContainsKey(String key)
@@ -48,88 +48,62 @@ namespace adesso.BusinessProcesses.ConfigurationSubstitution
             return BaseValues[key];
         }
 
-        public bool TryGet(String key, ref String value)
+        public bool TryGet(string key, ref string value)
         {
             bool isContained = ContainsKey(key);
+            if (!isContained)
+                return isContained;
 
-            if (isContained)
-            {
-                if (value != null)
-                {
-                    value = BaseValues[key];
-                }
-            }
+            if (value != null)
+                value = BaseValues[key];
 
             return isContained;
         }
+
+        #region Insert
         public void Insert(Hashtable values)
         {
-            if (values != null && values.Count > 0)
-            {
-                for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
-                {
-                    String key = valueEnum.Key.ToString();
-                    Add(true, key, valueEnum.Value);
-                }
-            }
+            if (values == null || values.Count == 0)
+                return;
+
+            for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
+                Add(true, valueEnum.Key.ToString(), valueEnum.Value);
         }
 
         public void Insert(PSObject values)
         {
-            if (values != null)
-            {
-                for (var memberEnum = values.Members.GetEnumerator(); memberEnum.MoveNext();)
-                {
-                    String key = memberEnum.Current.Name;
-                    if (memberEnum.Current.MemberType == PSMemberTypes.Property || memberEnum.Current.MemberType == PSMemberTypes.Properties || memberEnum.Current.MemberType == PSMemberTypes.NoteProperty)
-                    {
-                        Add(true, key, memberEnum.Current.Value);
-                    }
-                }
-            }
-        }
+            if (values == null)
+                return;
 
-        public void Insert(String key, Object value)
-        {
-            Add(true, key, value);
+            for (var memberEnum = values.Members.GetEnumerator(); memberEnum.MoveNext();)
+                if (memberEnum.Current.MemberType == PSMemberTypes.Property || memberEnum.Current.MemberType == PSMemberTypes.Properties || memberEnum.Current.MemberType == PSMemberTypes.NoteProperty)
+                    Add(true, memberEnum.Current.Name, memberEnum.Current.Value);
         }
-
         public void Insert(Dictionary<string, object> values)
         {
             if (values != null && values.Count > 0)
-            {
                 for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
-                {
-                    String key = valueEnum.Current.Key.ToString();
-                    Add(true, key, valueEnum.Current.Value);
-                }
-            }
+                    Add(true, valueEnum.Current.Key.ToString(), valueEnum.Current.Value);
         }
         public void Insert(Dictionary<string, string> values)
         {
             if (values != null && values.Count > 0)
-            {
                 for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
-                {
-                    String key = valueEnum.Current.Key.ToString();
-                    Add(true, key, valueEnum.Current.Value);
-                }
-            }
+                    Add(true, valueEnum.Current.Key.ToString(), valueEnum.Current.Value);
         }
 
+        public void Insert(String key, Object value) => Add(true, key, value);
+        #endregion
 
-        public bool TryAdd(Dictionary<string, object> values)
+
+        #region TryAdd
+        public bool TryAdd(NamingData naming)
         {
             bool isUnique = true;
 
-            if (values != null && values.Count > 0)
-            {
-                for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
-                {
-                    String key = valueEnum.Current.Key;
-                    isUnique = (TryAdd(key, valueEnum.Current.Value)) ? isUnique : false;
-                }
-            }
+            if (naming != null && naming.BaseValues.Count > 0)
+                for (var valueEnum = naming.BaseValues.GetEnumerator(); valueEnum.MoveNext();)
+                    isUnique = TryAdd(valueEnum.Current.Key, valueEnum.Current.Value) && isUnique;
 
             return isUnique;
         }
@@ -139,13 +113,8 @@ namespace adesso.BusinessProcesses.ConfigurationSubstitution
             bool isUnique = true;
 
             if (values != null && values.Count > 0)
-            {
                 for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
-                {
-                    String key = valueEnum.Key.ToString();
-                    isUnique = (TryAdd(key, valueEnum.Value)) ? isUnique : false;
-                }
-            }
+                    isUnique = TryAdd(valueEnum.Key.ToString(), valueEnum.Value) && isUnique;
 
             return isUnique;
         }
@@ -155,24 +124,35 @@ namespace adesso.BusinessProcesses.ConfigurationSubstitution
             bool isUnique = true;
 
             if (values != null)
-            {
                 for (var memberEnum = values.Members.GetEnumerator(); memberEnum.MoveNext();)
-                {
-                    String key = memberEnum.Current.Name;
                     if (memberEnum.Current.MemberType == PSMemberTypes.Property || memberEnum.Current.MemberType == PSMemberTypes.Properties || memberEnum.Current.MemberType == PSMemberTypes.NoteProperty)
-                    {
-                        isUnique = (TryAdd(key, memberEnum.Current.Value)) ? isUnique : false;
-                    }
-                }
-            }
+                        isUnique = TryAdd(memberEnum.Current.Name, memberEnum.Current.Value) && isUnique;
+
+            return isUnique;
+        }
+        public bool TryAdd(Dictionary<string, object> values)
+        {
+            bool isUnique = true;
+
+            if (values != null && values.Count > 0)
+                for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
+                    isUnique = TryAdd(valueEnum.Current.Key, valueEnum.Current.Value) && isUnique;
+
+            return isUnique;
+        }
+        public bool TryAdd(Dictionary<string, string> values)
+        {
+            bool isUnique = true;
+
+            if (values != null && values.Count > 0)
+                for (var valueEnum = values.GetEnumerator(); valueEnum.MoveNext();)
+                    isUnique = TryAdd(valueEnum.Current.Key, valueEnum.Current.Value) && isUnique;
 
             return isUnique;
         }
 
-        public bool TryAdd(String key, Object value)
-        {
-            return Add(false, key, value);
-        }
+        public bool TryAdd(String key, Object value) => Add(false, key, value);
+        #endregion
 
         private void BreakupValue(ref String result, Object value)
         {
@@ -221,22 +201,20 @@ namespace adesso.BusinessProcesses.ConfigurationSubstitution
             bool isUnique = true;
             String finalResult = String.Empty;
 
-            if (value != null && !String.IsNullOrEmpty(key))
-            {
-                BreakupValue(ref finalResult, value);
+            if (value == null || String.IsNullOrEmpty(key))
+                return false;
 
-                if (!ContainsKey(key))
-                {
-                    BaseValues.Add(key, finalResult);
-                }
-                else
-                {
-                    isUnique = false;
-                    if (overwrite)
-                    {
-                        BaseValues[key] = finalResult;
-                    }
-                }
+            BreakupValue(ref finalResult, value);
+
+            if (!ContainsKey(key))
+            {
+                BaseValues.Add(key, finalResult);
+            }
+            else
+            {
+                isUnique = false;
+                if (overwrite)
+                    BaseValues[key] = finalResult;
             }
 
             return isUnique;
